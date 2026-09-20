@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>iPhone 16 Pro Max Simulator</title>
+  
+  <!-- Configuration PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#fff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iPhone Sim">
+  <link rel="apple-touch-icon" href="https://cdn.osxdaily.com/wp-content/uploads/2025/07/iOS-26-Wallpaper-Sky-Light.jpg">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    #screen { background-size: cover; transition: filter 0.1s ease-out; }
+    @keyframes openApp { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .animate-open-app { animation: openApp 0.28s cubic-bezier(0.2, 0.9, 0.3, 1) forwards; }
+    
+    @keyframes jiggle {
+      0% { transform: rotate(-1.5deg) translateY(0px); }
+      50% { transform: rotate(1.5deg) translateY(-0.5px); }
+      100% { transform: rotate(-1.5deg) translateY(0px); }
+    }
+    .animate-jiggle {
+      animation: jiggle 0.22s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-white flex items-center justify-center h-screen m-0 select-none font-sans overflow-hidden">
+  <div class="bg-black w-[300px] h-[625px] rounded-[55px] p-[4px] border-4 border-[#3C3C3C] relative shadow-2xl">
+    <div class="bg-[url('https://cdn.osxdaily.com/wp-content/uploads/2025/07/iOS-26-Wallpaper-Sky-Light.jpg')] w-full h-full rounded-[50px] relative overflow-hidden flex flex-col" id="screen">
+      
+      <!-- FPS & Pro-Motion Monitor -->
+      <div id="fpsDisplay" class="absolute top-3 left-5 z-[1002] text-[8px] font-bold text-white/90 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full pointer-events-none">
+        120 FPS • ProMotion
+      </div>
+
+      <!-- Dynamic Island -->
+      <div class="bg-black w-[110px] h-[36.67px] rounded-full left-1/2 -translate-x-1/2 absolute top-[13px] z-[1000]"></div>
+
+      <!-- HOME SCREEN APP GRID -->
+      <div class="pt-[60px] px-[18px] grid grid-cols-4 gap-y-4 gap-x-3 z-0 min-h-[400px] flex-1" id="homeGrid"></div>
+
+      <!-- ACTION MODAL FOR UNINSTALL -->
+      <div id="appActionModal" class="absolute inset-0 bg-black/40 backdrop-blur-sm z-[1500] hidden items-end justify-center p-4 transition-all">
+        <div class="bg-white/90 backdrop-blur-xl w-full rounded-[22px] p-3 flex flex-col gap-2 border border-white/50 shadow-2xl animate-open-app">
+          <div id="actionModalTitle" class="text-center font-bold text-[13px] text-gray-800 py-1 border-b border-gray-200/60">Nom App</div>
+          <button id="actionModalUninstallBtn" data-i18n="uninstallApp" class="w-full py-2.5 bg-red-500/10 text-red-600 font-bold text-[12px] rounded-[12px] hover:bg-red-500/20 active:scale-95 transition">
+            Désinstaller l'application
+          </button>
+          <button onclick="closeAppModal()" data-i18n="cancel" class="w-full py-2.5 bg-gray-200/80 text-gray-800 font-semibold text-[12px] rounded-[12px] active:scale-95 transition">
+            Annuler
+          </button>
+        </div>
+      </div>
+
+      <!-- DOCK LIQUID GLASS -->
+      <div class="absolute bottom-[26px] left-1/2 -translate-x-1/2 w-[250px] h-[68px] bg-white/20 backdrop-blur-xl saturate-180 rounded-[30px] border border-white/40 shadow-lg flex items-center justify-evenly px-2 z-10">
+        <!-- App Store Icon -->
+        <div class="w-[48px] h-[48px] rounded-[13px] flex items-center justify-center cursor-pointer shadow-md transition-all duration-150 active:scale-90 active:opacity-80 relative bg-gradient-to-br from-[#1E88E5] to-[#1565C0]" onclick="openAppStore()">
+          <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M18.82 10.33l-1.91-3.3a1.5 1.5 0 00-1.3-.75H8.39a1.5 1.5 0 00-1.3.75l-1.9 3.3A1.5 1.5 0 005.19 12h13.62a1.5 1.5 0 001.01-1.67zM12 2a10 10 0 1010 10A10 10 0 0012 2zm0 18a8 8 0 118-8 8 8 0 01-8 8z"/></svg>
+        </div>
+        <!-- Settings App Icon -->
+        <div class="w-[48px] h-[48px] rounded-[13px] flex items-center justify-center cursor-pointer shadow-md transition-all duration-150 active:scale-90 active:opacity-80 relative bg-gradient-to-br from-gray-600 to-gray-800" onclick="openSettings()">
+          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+      </div>
+
+      <!-- SETTINGS WINDOW -->
+      <div class="absolute inset-0 bg-[#f2f2f7] rounded-[50px] z-[100] hidden flex-col overflow-hidden animate-open-app" id="settingsWindow">
+        <div class="pt-[50px] px-4 pb-[10px] bg-white/85 backdrop-blur-md border-b border-black/10 flex items-center justify-between">
+          <div class="text-[20px] font-bold text-black" data-i18n="settings">Réglages</div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+          
+          <div class="flex flex-col gap-1.5">
+            <div class="text-[#8e8e93] font-semibold uppercase px-1 text-[10px]" data-i18n="displayBrightness">Affichage & Luminosité</div>
+            <div class="bg-white rounded-[14px] p-3 flex flex-col gap-2 shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-[12px] text-gray-800" data-i18n="brightness">Luminosité</span>
+                <span id="brightnessVal" class="text-[10px] font-bold text-[#007aff]">100%</span>
+              </div>
+              <div class="flex items-center gap-2 pt-1">
+                <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm0 12a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM4.22 4.22a1 1 0 011.415 0l.707.707a1 1 0 01-1.414 1.414l-.708-.707a1 1 0 010-1.414zm11.314 11.314a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm12 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM4.22 15.78a1 1 0 010-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414 0zm11.314-11.314a1 1 0 010-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414 0zM10 6a4 4 0 100 8 4 4 0 000-8z"/></svg>
+                <input type="range" id="brightnessSlider" min="20" max="100" value="100" oninput="changeBrightness(this.value)" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#007aff]">
+                <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm0 12a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM4.22 4.22a1 1 0 011.415 0l.707.707a1 1 0 01-1.414 1.414l-.708-.707a1 1 0 010-1.414zm11.314 11.314a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm12 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM4.22 15.78a1 1 0 010-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414 0zm11.314-11.314a1 1 0 010-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414 0zM10 6a4 4 0 100 8 4 4 0 000-8z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="text-[#8e8e93] font-semibold uppercase px-1 text-[10px]" data-i18n="languageSection">Langue</div>
+            <div class="bg-white rounded-[14px] p-3 flex items-center justify-between shadow-sm">
+              <span class="font-semibold text-[12px] text-gray-800" data-i18n="selectLanguage">Langue de l'appareil</span>
+              <select id="languageSelect" onchange="changeLanguage(this.value)" class="bg-[#e3e3e8] text-gray-800 text-[11px] font-semibold px-2 py-1 rounded-md outline-none">
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="text-[#8e8e93] font-semibold uppercase px-1 text-[10px]" data-i18n="debugMenu">Menu Debug</div>
+            
+            <div class="bg-white rounded-[14px] p-3 flex items-center justify-between shadow-sm">
+              <span class="font-semibold text-[12px] text-gray-800" data-i18n="showFps">Afficher FPS</span>
+              <select id="fpsSelect" onchange="toggleFps(this.value)" class="bg-[#e3e3e8] text-gray-800 text-[11px] font-semibold px-2 py-1 rounded-md outline-none">
+                <option value="yes" data-i18n="yes">Oui</option>
+                <option value="no" data-i18n="no">Non</option>
+              </select>
+            </div>
+
+            <div class="bg-white rounded-[14px] p-3 flex flex-col gap-2 shadow-sm">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-[12px] text-gray-800" data-i18n="benchmarkFps">Benchmark FPS</span>
+                <button id="benchBtn" onclick="runBenchmark()" data-i18n="run" class="bg-[#007aff] text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase cursor-pointer hover:bg-blue-600 transition">
+                  LANCER
+                </button>
+              </div>
+              <div id="benchResult" class="text-[10px] text-gray-500 font-medium" data-i18n="benchmarkInfo">Test de performance sous charge (5s)</div>
+            </div>
+
+            <div class="bg-white rounded-[14px] p-3 flex items-center justify-between shadow-sm">
+              <div class="flex flex-col">
+                <span class="font-semibold text-[12px] text-gray-800" data-i18n="pixelTest">Test Pixels Écran</span>
+                <span class="text-[9px] text-gray-400" data-i18n="pixelTestSub">Test d'affichage des couleurs</span>
+              </div>
+              <button onclick="startPixelTest()" data-i18n="start" class="bg-[#007aff] text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase cursor-pointer hover:bg-blue-600 transition">
+                DÉMARRER
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PIXEL TEST OVERLAY -->
+      <div id="pixelTestOverlay" class="absolute inset-0 z-[2000] hidden flex-col items-center justify-between p-4 cursor-pointer" onclick="nextPixelColor(event)">
+        <div class="bg-black/50 text-white text-[9px] px-3 py-1 rounded-full backdrop-blur-md pointer-events-none mt-8" data-i18n="touchToChangeColor">
+          Touchez l'écran pour changer de couleur
+        </div>
+        <button onclick="closePixelTest(event)" data-i18n="exitTest" class="bg-black/60 text-white text-[10px] font-bold px-4 py-1.5 rounded-full backdrop-blur-md mb-8 hover:bg-black transition">
+          Quitter le test
+        </button>
+      </div>
+
+      <!-- APP STORE WINDOW -->
+      <div class="absolute inset-0 bg-[#f2f2f7] rounded-[50px] z-[100] hidden flex-col overflow-hidden animate-open-app" id="appStoreWindow">
+        <div class="pt-[50px] px-4 pb-[10px] bg-white/85 backdrop-blur-md border-b border-black/10 flex items-center justify-between">
+          <div class="text-[20px] font-bold text-black" data-i18n="appStore">App Store</div>
+          <div class="flex gap-1.5 bg-[#e3e3e8] p-0.5 rounded-lg">
+            <div class="text-[11px] font-semibold px-2 py-1 rounded-md cursor-pointer text-[#007aff] bg-white shadow-sm" id="tabStore" onclick="switchStoreTab('store')" data-i18n="storeTab">Boutique</div>
+            <div class="text-[11px] font-semibold px-2 py-1 rounded-md cursor-pointer text-[#666]" id="tabUpload" onclick="switchStoreTab('upload')" data-i18n="uploadTab">Importer</div>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-3" id="storeView"></div>
+
+        <div class="flex-1 overflow-y-auto p-3 hidden flex-col gap-3" id="uploadView">
+          <div class="bg-white rounded-[14px] p-3 flex flex-col gap-2 shadow-sm">
+            <label class="text-[10px] font-semibold text-[#666] uppercase">1. Fichier app.json</label>
+            <input type="file" id="jsonInput" accept=".json" class="text-[10px]">
+            <label class="text-[10px] font-semibold text-[#666] uppercase mt-1.5">2. Fichier app.html / index.html</label>
+            <input type="file" id="htmlInput" accept=".html" class="text-[10px]">
+            <button class="bg-[#007aff] text-white p-2 rounded-lg text-[12px] font-semibold cursor-pointer mt-2 hover:bg-blue-600 transition shadow" onclick="processUpload()" data-i18n="publish">Publier sur l'App Store</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RUNNING APP WINDOW -->
+      <div class="absolute inset-0 bg-[#f2f2f7] rounded-[50px] z-[100] hidden flex-col overflow-hidden animate-open-app" id="runningAppWindow">
+        <iframe id="appRunnerFrame" class="w-full h-full border-none"></iframe>
+      </div>
+
+      <!-- HOME BAR -->
+      <div class="home-bar absolute bottom-[8px] left-1/2 -translate-x-1/2 w-[110px] h-[4.5px] bg-white rounded-full z-[1001] cursor-pointer transition-colors duration-200" onclick="goHome()"></div>
+
+    </div>
+  </div>
+
+  <script>
+    let storeApps = JSON.parse(localStorage.getItem('ios_store_apps') || '[]');
+    let installedApps = JSON.parse(localStorage.getItem('ios_installed_apps') || '[]');
+    let isJiggleMode = false;
+    let selectedAppForAction = null;
+
+    const translations = {
+      fr: {
+        settings: "Réglages",
+        displayBrightness: "Affichage & Luminosité",
+        brightness: "Luminosité",
+        languageSection: "Langue",
+        selectLanguage: "Langue de l'appareil",
+        debugMenu: "Menu Debug",
+        showFps: "Afficher FPS",
+        yes: "Oui",
+        no: "Non",
+        benchmarkFps: "Benchmark FPS",
+        run: "LANCER",
+        running: "EN COURS...",
+        pixelTest: "Test Pixels Écran",
+        pixelTestSub: "Test d'affichage des couleurs",
+        start: "DÉMARRER",
+        uninstallApp: "Désinstaller l'application",
+        cancel: "Annuler",
+        appStore: "App Store",
+        storeTab: "Boutique",
+        uploadTab: "Importer",
+        get: "Obtenir",
+        open: "Ouvrir",
+        uninstall: "Désinstaller",
+        publish: "Publier sur l'App Store",
+        emptyStore: "Aucune application publiée.<br>Allez dans \"Importer\" pour ajouter une app.",
+        selectBothFiles: "Veuillez sélectionner à la fois app.json et le fichier .html.",
+        publishSuccess: "App publiée avec succès et exportée dans data.sql !",
+        touchToChangeColor: "Touchez l'écran pour changer de couleur",
+        exitTest: "Quitter le test",
+        benchmarkInfo: "Test de performance sous charge (5s)"
+      },
+      en: {
+        settings: "Settings",
+        displayBrightness: "Display & Brightness",
+        brightness: "Brightness",
+        languageSection: "Language",
+        selectLanguage: "Device Language",
+        debugMenu: "Debug Menu",
+        showFps: "Show FPS",
+        yes: "Yes",
+        no: "No",
+        benchmarkFps: "FPS Benchmark",
+        run: "START",
+        running: "RUNNING...",
+        pixelTest: "Screen Pixel Test",
+        pixelTestSub: "Display color testing",
+        start: "START",
+        uninstallApp: "Uninstall Application",
+        cancel: "Cancel",
+        appStore: "App Store",
+        storeTab: "Store",
+        uploadTab: "Upload",
+        get: "Get",
+        open: "Open",
+        uninstall: "Uninstall",
+        publish: "Publish to App Store",
+        emptyStore: "No applications published yet.<br>Go to \"Upload\" to add an app.",
+        selectBothFiles: "Please select both app.json and the .html file.",
+        publishSuccess: "App published successfully and saved into data.sql!",
+        touchToChangeColor: "Tap screen to change color",
+        exitTest: "Exit test",
+        benchmarkInfo: "Performance test under load (5s)"
+      }
+    };
+
+    let currentLang = localStorage.getItem('ios_language') || 'fr';
+
+    function changeLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('ios_language', lang);
+      applyLanguage();
+      renderStore();
+    }
+
+    function applyLanguage() {
+      const t = translations[currentLang] || translations.fr;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.innerHTML = t[key];
+      });
+      document.getElementById('languageSelect').value = currentLang;
+    }
+
+    function changeBrightness(val) {
+      document.getElementById('screen').style.filter = `brightness(${val}%)`;
+      document.getElementById('brightnessVal').innerText = `${val}%`;
+      localStorage.setItem('ios_brightness', val);
+    }
+
+    const initialBrightness = localStorage.getItem('ios_brightness') || '100';
+    document.getElementById('brightnessSlider').value = initialBrightness;
+    changeBrightness(initialBrightness);
+    applyLanguage();
+
+    let frameCount = 0, lastTime = performance.now(), lastActivity = Date.now(), showFps = true, lastFrameTime = 0;
+    
+    function resetInactivity() { lastActivity = Date.now(); }
+    ['pointerdown', 'pointermove', 'touchstart', 'keydown', 'click'].forEach(evt => window.addEventListener(evt, resetInactivity, { passive: true }));
+
+    function trackFPS(now) {
+      const idle = (Date.now() - lastActivity) > 2500;
+      if (idle) {
+        if (now - lastFrameTime >= 1000) {
+          lastFrameTime = now;
+          if (showFps) document.getElementById('fpsDisplay').innerText = `1 FPS • Eco Mode`;
+        }
+      } else {
+        frameCount++;
+        if (now - lastTime >= 500) {
+          const fps = Math.round((frameCount * 1000) / (now - lastTime));
+          if (showFps) document.getElementById('fpsDisplay').innerText = `${fps} FPS • ProMotion`;
+          frameCount = 0; lastTime = now;
+        }
+      }
+      requestAnimationFrame(trackFPS);
+    }
+    requestAnimationFrame(trackFPS);
+
+    function toggleFps(val) {
+      showFps = (val === 'yes');
+      document.getElementById('fpsDisplay').style.display = showFps ? 'block' : 'none';
+    }
+
+    let isBenchmarking = false;
+    function runBenchmark() {
+      if (isBenchmarking) return;
+      isBenchmarking = true;
+      const t = translations[currentLang] || translations.fr;
+      const btn = document.getElementById('benchBtn');
+      const res = document.getElementById('benchResult');
+      btn.innerText = t.running;
+      btn.disabled = true;
+      res.innerHTML = `<span class="text-blue-500 font-semibold">${t.benchmarkInfo}...</span>`;
+
+      let frames = 0, samples = [], start = performance.now(), lastBench = performance.now();
+
+      function benchStep(now) {
+        frames++;
+        resetInactivity();
+        let dummy = 0;
+        for (let i = 0; i < 400000; i++) { dummy += Math.sin(i); }
+
+        if (now - lastBench >= 500) {
+          samples.push(Math.round((frames * 1000) / (now - lastBench)));
+          frames = 0; lastBench = now;
+        }
+
+        if (now - start < 5000) {
+          requestAnimationFrame(benchStep);
+        } else {
+          isBenchmarking = false;
+          btn.innerText = t.run;
+          btn.disabled = false;
+          if (samples.length === 0) samples.push(60);
+          const avg = Math.round(samples.reduce((a, b) => a + b, 0) / samples.length);
+          const min = Math.min(...samples);
+          const max = Math.max(...samples);
+          res.innerHTML = `<span class="text-green-600 font-bold">Avg: ${avg} FPS</span> (Min: ${min} / Max: ${max})`;
+        }
+      }
+      requestAnimationFrame(benchStep);
+    }
+
+    const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFFFF', '#000000'];
+    let colorIdx = 0;
+
+    function startPixelTest() {
+      const overlay = document.getElementById('pixelTestOverlay');
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      colorIdx = 0;
+      overlay.style.backgroundColor = colors[colorIdx];
+    }
+
+    function nextPixelColor(e) {
+      e.stopPropagation();
+      colorIdx = (colorIdx + 1) % colors.length;
+      document.getElementById('pixelTestOverlay').style.backgroundColor = colors[colorIdx];
+    }
+
+    function closePixelTest(e) {
+      e.stopPropagation();
+      const overlay = document.getElementById('pixelTestOverlay');
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+    }
+
+    function openAppStore() {
+      document.getElementById('appStoreWindow').classList.remove('hidden');
+      document.getElementById('appStoreWindow').classList.add('flex');
+      renderStore();
+    }
+
+    function openSettings() {
+      document.getElementById('settingsWindow').classList.remove('hidden');
+      document.getElementById('settingsWindow').classList.add('flex');
+    }
+
+    function goHome() {
+      document.getElementById('appStoreWindow').classList.add('hidden');
+      document.getElementById('settingsWindow').classList.add('hidden');
+      document.getElementById('runningAppWindow').classList.add('hidden');
+      document.getElementById('appRunnerFrame').src = 'about:blank';
+      if (isJiggleMode) toggleJiggleMode(false);
+    }
+
+    function switchStoreTab(tab) {
+      const storeView = document.getElementById('storeView');
+      const uploadView = document.getElementById('uploadView');
+      const tabStore = document.getElementById('tabStore');
+      const tabUpload = document.getElementById('tabUpload');
+
+      if (tab === 'store') {
+        storeView.classList.remove('hidden');
+        uploadView.classList.add('hidden');
+        tabStore.className = "text-[11px] font-semibold px-2 py-1 rounded-md cursor-pointer text-[#007aff] bg-white shadow-sm";
+        tabUpload.className = "text-[11px] font-semibold px-2 py-1 rounded-md cursor-pointer text-[#666]";
+      } else {
+        storeView.classList.add('hidden');
+        uploadView.classList.remove('hidden');
+        tabUpload.className = "text-[11px] font-semibold px-2 py-1 rounded-md cursor-pointer text-[#007aff] bg-white shadow-sm";
+        tabStore.className = "text-[11px] font-semibold px-2 py-1 rounded-md cursor-pointer text-[#666]";
+      }
+    }
+
+    function downloadSqlFile(app) {
+      const escapeSql = (str) => typeof str === 'string' ? str.replace(/'/g, "''") : '';
+
+      const sqlContent = `-- ===============================================
+-- Fichier data.sql - Sauvegarde Application iOS
+-- Nom de l'app: ${app.name}
+-- ===============================================
+
+CREATE TABLE IF NOT EXISTS apps (
+    id VARCHAR(255) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    short_name VARCHAR(100),
+    icon TEXT,
+    html LONGTEXT,
+    config TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO apps (id, name, short_name, icon, html, config) VALUES (
+    '${escapeSql(app.id)}',
+    '${escapeSql(app.name)}',
+    '${escapeSql(app.short_name || app.name)}',
+    '${escapeSql(app.icon)}',
+    '${escapeSql(app.html)}',
+    '${escapeSql(JSON.stringify(app.config))}'
+);
+`;
+
+      const blob = new Blob([sqlContent], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'data.sql';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function processUpload() {
+      const jsonFile = document.getElementById('jsonInput').files[0];
+      const htmlFile = document.getElementById('htmlInput').files[0];
+      const t = translations[currentLang] || translations.fr;
+
+      if (!jsonFile || !htmlFile) {
+        alert(t.selectBothFiles);
+        return;
+      }
+
+      const jsonReader = new FileReader();
+      const htmlReader = new FileReader();
+
+      jsonReader.onload = function(eJson) {
+        try {
+          const appConfig = JSON.parse(eJson.target.result);
+
+          htmlReader.onload = function(eHtml) {
+            const htmlContent = eHtml.target.result;
+            const appId = 'app_' + Date.now();
+
+            const newApp = {
+              id: appId,
+              name: appConfig.name || appConfig.short_name || 'App Sans Nom',
+              short_name: appConfig.short_name || appConfig.name || 'App',
+              icon: appConfig.icon || '📱',
+              html: htmlContent,
+              config: appConfig
+            };
+
+            storeApps.push(newApp);
+            localStorage.setItem('ios_store_apps', JSON.stringify(storeApps));
+
+            downloadSqlFile(newApp);
+
+            switchStoreTab('store');
+            renderStore();
+            alert(t.publishSuccess);
+
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('htmlInput').value = '';
+          };
+
+          htmlReader.readAsText(htmlFile);
+        } catch (err) {
+          alert("Erreur dans app.json : " + err.message);
+        }
+      };
+
+      jsonReader.readAsText(jsonFile);
+    }
+
+    function renderStore() {
+      const storeView = document.getElementById('storeView');
+      const t = translations[currentLang] || translations.fr;
+
+      if (storeApps.length === 0) {
+        storeView.innerHTML = `<div class="text-center text-gray-400 text-[11px] py-10 font-medium">${t.emptyStore}</div>`;
+        return;
+      }
+
+      storeView.innerHTML = storeApps.map(app => {
+        const isInstalled = installedApps.some(a => a.id === app.id);
+        const actionBtn = isInstalled 
+          ? `<button onclick="launchApp('${app.id}')" class="bg-gray-200 text-[#007aff] px-3 py-1 rounded-full font-bold text-[11px]">${t.open}</button>`
+          : `<button onclick="installApp('${app.id}')" class="bg-[#007aff] text-white px-3 py-1 rounded-full font-bold text-[11px]">${t.get}</button>`;
+
+        return `
+          <div class="bg-white rounded-[16px] p-3 flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-[10px] bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-lg font-bold shadow-sm">
+                ${app.icon && app.icon.length <= 4 ? app.icon : '📱'}
+              </div>
+              <div class="flex flex-col">
+                <span class="font-bold text-[13px] text-gray-800">${app.name}</span>
+                <span class="text-[9px] text-gray-400 font-semibold">${app.short_name}</span>
+              </div>
+            </div>
+            ${actionBtn}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function installApp(appId) {
+      const app = storeApps.find(a => a.id === appId);
+      if (app && !installedApps.some(a => a.id === appId)) {
+        installedApps.push(app);
+        localStorage.setItem('ios_installed_apps', JSON.stringify(installedApps));
+        renderHomeGrid();
+        renderStore();
+      }
+    }
+
+    function launchApp(appId) {
+      const app = storeApps.find(a => a.id === appId) || installedApps.find(a => a.id === appId);
+      if (app) {
+        const runner = document.getElementById('appRunnerFrame');
+        runner.srcdoc = app.html;
+        document.getElementById('runningAppWindow').classList.remove('hidden');
+        document.getElementById('runningAppWindow').classList.add('flex');
+      }
+    }
+
+    function renderHomeGrid() {
+      const grid = document.getElementById('homeGrid');
+      grid.innerHTML = installedApps.map(app => `
+        <div class="flex flex-col items-center gap-1 app-item relative ${isJiggleMode ? 'animate-jiggle' : ''}" 
+             data-id="${app.id}" 
+             onclick="handleAppClick('${app.id}')">
+          <div class="w-[48px] h-[48px] rounded-[13px] bg-gradient-to-tr from-blue-500 to-teal-400 flex items-center justify-center text-white text-xl font-bold shadow-md active:scale-90 transition">
+            ${app.icon && app.icon.length <= 4 ? app.icon : '📱'}
+          </div>
+          <span class="text-[10px] text-white font-medium drop-shadow truncate w-full text-center">${app.short_name || app.name}</span>
+          ${isJiggleMode ? `
+            <div onclick="openUninstallModal(event, '${app.id}')" class="absolute -top-1 -left-1 w-5 h-5 bg-gray-400/80 text-white rounded-full flex items-center justify-center text-[10px] font-bold border border-white cursor-pointer z-20">
+              ✕
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    function handleAppClick(appId) {
+      if (isJiggleMode) return;
+      launchApp(appId);
+    }
+
+    let pressTimer = null;
+    document.getElementById('homeGrid').addEventListener('pointerdown', () => {
+      pressTimer = setTimeout(() => {
+        toggleJiggleMode(true);
+      }, 700);
+    });
+
+    ['pointerup', 'pointermove', 'pointercancel'].forEach(evt => {
+      document.getElementById('homeGrid').addEventListener(evt, () => clearTimeout(pressTimer));
+    });
+
+    function toggleJiggleMode(enable) {
+      isJiggleMode = enable;
+      renderHomeGrid();
+    }
+
+    function openUninstallModal(e, appId) {
+      e.stopPropagation();
+      selectedAppForAction = appId;
+      const app = installedApps.find(a => a.id === appId);
+      if (app) {
+        document.getElementById('actionModalTitle').innerText = app.name;
+        document.getElementById('actionModalUninstallBtn').onclick = () => confirmUninstall(appId);
+        const modal = document.getElementById('appActionModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeAppModal() {
+      const modal = document.getElementById('appActionModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function confirmUninstall(appId) {
+      installedApps = installedApps.filter(a => a.id !== appId);
+      localStorage.setItem('ios_installed_apps', JSON.stringify(installedApps));
+      closeAppModal();
+      renderHomeGrid();
+      if (installedApps.length === 0) toggleJiggleMode(false);
+    }
+
+    renderHomeGrid();
+  </script>
+
+  <!-- ENREGISTREMENT SERVICE WORKER PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('PWA Service Worker actif sur :', reg.scope))
+          .catch(err => console.error('Erreur Service Worker :', err));
+      });
+    }
+  </script>
+</body>
+</html>
